@@ -29,22 +29,10 @@ app.use(allowCrossDomain);
 app.use(bodyParser.urlencoded({
   extended: true
 }));
+app.use(bodyParser.json());
 
 // All our routes will start with /api
 app.use('/api', router);
-
-//Default route here
-var homeRoute = router.route('/');
-
-homeRoute.get(function(req, res) {
-  res.json({ message: 'Hello World!' });
-});
-
-//Llama route 
-//var llamaRoute = router.route('/llamas');
-//llamaRoute.get(function(req, res) {
-//  res.json([{ "name": "alice", "height": 12 }, { "name": "jane", "height": 13 }]);
-//});
 
 
 //users route
@@ -96,7 +84,7 @@ UsersRoute.get(function(req, res){
     }
 
     if(count){
-        User.find(returned_users, selected, options).count(function (err, users) {
+        User.find(returned_users).count(function (err, users) {
             if(err){
                 res.status(500).json({message: "Error in getting all users", data: err});
             }
@@ -130,13 +118,13 @@ UsersRoute.post(function(req, res){
         new_user.pendingTasks = [];
     }
 
-    new_user.save(function(err){
+    new_user.save(function(err, saved_user){
         if(err){
             res.status(500).json({message: "Error in creating new user", data: err});
 
         }
         else{
-            res.status(201).json({message: "Successfully created new user", data: new_user});
+            res.status(201).json({message: "Successfully created new user", data: saved_user});
 
         }
     });
@@ -153,16 +141,16 @@ var singleUserRoute = router.route('/users/:user_id');
 singleUserRoute.get(function(req, res){
     var user_id = req.params.user_id;
 
-    User.find({'_id': user_id}, function(err, user) {
+    User.findById(user_id, function(err, user) {
         if(err){
             res.status(404).json({message: "Cannot find user", data: err });
 
         }
-        else if(user.length == 0){
+        else if(user == undefined || user.length == 0){
             res.status(404).json({message: "Cannot find the user with id", data: user_id });
         }
         else{
-            res.status(200).json({message: "Found user", data: user });
+            res.status(200).json({message: "Found user", data: user.toJSON() });
 
         }
     });
@@ -204,7 +192,7 @@ singleUserRoute.delete(function(req, res){
             res.status(404).json({message: "Cannot find the user with id", data: user_id });
         }
         else{
-            res.status(200).json({message: "Successfully deleted user", data: user_id});
+            res.status(200).json({message: "Successfully deleted user", data: found});
         }
     });
 
@@ -311,16 +299,16 @@ var singleTaskRoute = router.route('/tasks/:task_id');
 singleTaskRoute.get(function(req, res){
     var task_id = req.params.task_id;
 
-    Task.find({'_id': task_id}, function(err, task) {
+    Task.findById(task_id, function(err, task) {
         if(err){
             res.status(404).json({message: "Cannot find task", data: err });
 
         }
-        else if(task.length == 0 ){
+        else if(task==undefined || task.length == 0 ){
             res.status(404).json({message: "Cannot find the task with id", data: task_id });
         }
         else{
-            res.status(200).json({message: "Found task", data: task });
+            res.status(200).json({message: "Found task", data: task.toJSON() });
         }
     });
 
